@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'widgets/todo_item.dart';
+import 'task_page.dart';
+import 'home_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -10,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
+      create: (context) => AppState(),
       child: MaterialApp(
         title: 'Todo List',
         theme: ThemeData(
@@ -24,17 +27,29 @@ class MyApp extends StatelessWidget {
   }  
 }
 
-class MyAppState extends ChangeNotifier {
-   var todoList = <String>[];
-
-  void addTask(task) {
+class AppState extends ChangeNotifier {
+  List<Task> todoList = [];
+  List<Task> completed = [];
+  
+  void addTask(text) {
+    Task task = Task(task: text);
     todoList.insert(0, task);
     notifyListeners();
   }
 
-  void finishTask(task) {
-    var index = todoList.indexOf(task);
-    todoList.removeAt(index);
+  void triggerTask(task) {
+    var index = 0;
+
+    if (todoList.contains(task)) {
+      index = todoList.indexOf(task);
+      todoList.removeAt(index);
+      completed.insert(0, task);
+    } 
+    else {
+      index = completed.indexOf(task);
+      completed.removeAt(index);
+      todoList.insert(index, task);
+    }
     notifyListeners();
   }
 }
@@ -51,13 +66,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-
+    var appState = context.watch<AppState>();
     Widget page;
     switch(selectedIndex) {
       case 0:
-        page = Center(child: Text('Bienvenido'));
+        page = HomePage();
       case 1: 
-        page = TaskPage();
+        page = TaskPage(
+          todoList: appState.todoList,
+          completed: appState.completed,);
       case 2:
         page = Center(child: Text('Perfil'));
       default:
@@ -66,129 +83,55 @@ class _MyHomePageState extends State<MyHomePage> {
     return LayoutBuilder(
       builder: (context, constraints) {
 
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: page,
-          bottomNavigationBar: BottomNavigationBar(
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                label: 'Inicio',
-                icon: Icon(Icons.home),
-              ),
-
-              BottomNavigationBarItem(
-                label: 'Tareas',
-                icon: Icon(Icons.list),
-              ),
-
-              BottomNavigationBarItem(
-                label: 'Perfil',
-                icon: Icon(Icons.person),
+        return Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/background.jpg'),
+              fit: BoxFit.cover,
               )
-
-            ],
-            currentIndex: selectedIndex,
-            selectedItemColor: Colors.blue,
-            onTap: (value) {
-              setState(() {
-                selectedIndex = value;
-              });
-            },
           ),
-
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                'Hola, Carlos',
+                style: TextStyle(color: Color.fromRGBO(240, 240, 240, 0.9))
+                ),
+              backgroundColor: Color.fromRGBO(20, 20, 20, 0.9),  
+            ),
+            backgroundColor: Colors.transparent,
+            body: page,
+            bottomNavigationBar: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  label: 'Inicio',
+                  icon: Icon(Icons.home),
+                ),
+          
+                BottomNavigationBarItem(
+                  label: 'Tareas',
+                  icon: Icon(Icons.list),
+                ),
+          
+                BottomNavigationBarItem(
+                  label: 'Perfil',
+                  icon: Icon(Icons.person),
+                )
+          
+              ],
+              currentIndex: selectedIndex,
+              selectedItemColor: Colors.blue,
+              backgroundColor: Color.fromRGBO(20, 20, 20, 0.9),
+              unselectedItemColor: Color.fromRGBO(240, 240, 240, 0.9),
+              onTap: (value) {
+                setState(() {
+                  selectedIndex = value;
+                });
+              },
+            ),
+          
+          ),
         );
       }
-    );
-  }
-}
-
-class TaskPage extends StatelessWidget {
-  const TaskPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var todoList = appState.todoList;
-
-    final TextEditingController controller = TextEditingController();
-
-    return Column(
-     children: [
-      Expanded(
-        child: todoList.isEmpty
-              ? Center(
-                  child: Text('Agrega una nueva tarea.'),
-                )
-              : ListView(
-                  children: [
-                    for (var task in todoList)
-                      ListTile(
-                        leading: ElevatedButton.icon(
-                          onPressed: () {
-                            appState.finishTask(task);
-                          },
-                          icon: appState.todoList.contains(task)
-                              ? Icon(Icons.circle_outlined)
-                              : Icon(Icons.check_circle),
-                          label: Text(task.toString()),
-                        ),
-                      )
-                  ],
-                ),
-        ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: 'Agregar una tarea',
-            border: OutlineInputBorder(),
-            suffixIcon: IconButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  appState.addTask(controller.text);
-                  controller.clear();
-                }
-             }, 
-              icon: Icon(Icons.add)
-            )
-          )
-        ),
-      ),
-      SizedBox(height: 20,)
-          
-     ],
-    ); 
-  }
-}
-
-class TaskCard extends StatelessWidget {
-  const TaskCard({
-    super.key,
-    required this.task,
-  });
-
-  final String task;
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    final theme =  Theme.of(context);
-
-    return Card(
-      color: theme.colorScheme.onPrimary,
-      child: Padding(
-        padding: EdgeInsets.all(8.0),
-        child: ElevatedButton.icon(
-          onPressed: () {
-            appState.finishTask(task);
-          },
-          icon: appState.todoList.contains(task)
-                ? Icon(Icons.circle_outlined)
-                : Icon(Icons.check_circle),
-          label: Text(task.toString()),
-        ),
-      ),
     );
   }
 }
