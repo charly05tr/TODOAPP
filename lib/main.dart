@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'widgets/todo_item.dart';
-import 'task_page.dart';
-import 'home_page.dart';
+import 'pages/task_page.dart';
+import 'pages/home_page.dart';
+import 'pages/profile_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -28,30 +29,7 @@ class MyApp extends StatelessWidget {
 }
 
 class AppState extends ChangeNotifier {
-  List<Task> todoList = [];
-  List<Task> completed = [];
-  
-  void addTask(text) {
-    Task task = Task(task: text);
-    todoList.insert(0, task);
-    notifyListeners();
-  }
 
-  void triggerTask(task) {
-    var index = 0;
-
-    if (todoList.contains(task)) {
-      index = todoList.indexOf(task);
-      todoList.removeAt(index);
-      completed.insert(0, task);
-    } 
-    else {
-      index = completed.indexOf(task);
-      completed.removeAt(index);
-      todoList.insert(index, task);
-    }
-    notifyListeners();
-  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -66,17 +44,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<AppState>();
     Widget page;
     switch(selectedIndex) {
       case 0:
         page = HomePage();
       case 1: 
-        page = TaskPage(
-          todoList: appState.todoList,
-          completed: appState.completed,);
+        page = TaskPage();
       case 2:
-        page = Center(child: Text('Perfil'));
+        page = ProfilePage();
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
@@ -86,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/background.jpg'),
+              image: AssetImage('assets/images/background.jpg'),
               fit: BoxFit.cover,
               )
           ),
@@ -98,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               backgroundColor: Color.fromRGBO(20, 20, 20, 0.9),  
             ),
-            backgroundColor: Colors.transparent,
+            backgroundColor: const Color.fromARGB(0, 255, 249, 249),
             body: page,
             bottomNavigationBar: BottomNavigationBar(
               items: const <BottomNavigationBarItem>[
@@ -135,3 +110,12 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+
+//https://restapitodoapp.onrender.com/api/tasks/
+//https://restapitodoapp.onrender.com/api/users/
+//https://restapitodoapp.onrender.com/api/register/
+//https://restapitodoapp.onrender.com/api/token-auth/
+//https://restapitodoapp.onrender.com/api/change-password/
+//https://restapitodoapp.onrender.com/api/reset-password/
+//https://restapitodoapp.onrender.com/apireset-password-confirm/
